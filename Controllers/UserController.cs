@@ -17,8 +17,14 @@ namespace UserAuth.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateUser(CreateUserDto dto)
         {
-            await _service.CreateUser(dto);
-            return Ok();
+           var result = await _service.CreateUser(dto);
+            return Ok(result);
+        }
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginUserDto dto)
+        {
+            var result = await _service.Login(dto);
+            return Ok(result);
         }
     }
 }
