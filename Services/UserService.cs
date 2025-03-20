@@ -42,19 +42,25 @@ namespace UserAuth.Services
             return new BadRequestObjectResult(result.Errors.Select(erro => erro.Description));
         }
 
-        public async Task<string> Login(LoginUserDto dto)
+        public async Task <string> Login(LoginUserDto dto)
         {
-            var result = await _singInManager.PasswordSignInAsync(dto.PrefixoUsuario, dto.Password, false, false);//dando erro
+            var user = await _singInManager
+                                       .UserManager
+                                       .Users
+                                       .FirstOrDefaultAsync(user => user.PrefixoUsuario == dto.PrefixoUsuario.ToUpper());
+            if (user == null)
+            {
+                throw new ApplicationException("Usuário não cadastrado");
+            }
+
+            var result = await _singInManager.PasswordSignInAsync(user.UserName, dto.Password, false, false);
 
             if (!result.Succeeded)
             {
                 throw new ApplicationException("Usuário ou senha inválidos");
             }
 
-            var user = _singInManager
-                           .UserManager
-                           .Users
-                           .FirstOrDefault(user => user.PrefixoUsuario == dto.PrefixoUsuario.ToUpper());
+            
             var token = _tokenService.GenerateToken(user);
             return token;
         }

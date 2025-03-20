@@ -4,10 +4,10 @@ namespace UserAuth.Authorization
 {
     public class NivelDeAcesso : IAuthorizationRequirement
     {
+        public string nivel { get; set; }
         public NivelDeAcesso(string nivelDeAcesso)
         {
             nivel = nivelDeAcesso;
         }
-        public string nivel { get; set; }
     }
 }

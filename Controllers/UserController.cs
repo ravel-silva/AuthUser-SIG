@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using UserAuth.Data.Dtos;
 using UserAuth.Services;
 
@@ -25,6 +26,24 @@ namespace UserAuth.Controllers
         {
             var result = await _service.Login(dto);
             return Ok(result);
+        }
+        [HttpGet]
+        [Authorize(policy: "RequireAdmin")]
+        public IActionResult Get()
+        {
+            return Ok("ok");
+        }
+        [HttpGet("teste")]
+        [Authorize(policy: "RequireStandardUser")]
+        public IActionResult Get2()
+        {
+            return Ok("ok");
+        }
+        [HttpGet("teste2")]
+        [Authorize(policy: "RequireSupervisor")]
+        public IActionResult Get3()
+        {
+            return Ok("ok");
         }
     }
 }
