@@ -1,6 +1,7 @@
 ﻿using UserAuth.Data.Dtos;
 using UserAuth.Model;
 using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 
 namespace UserAuth.Profiles
 {
@@ -9,6 +10,10 @@ namespace UserAuth.Profiles
         public UserProfile()
         {
             CreateMap<CreateUserDto, User>();
+
+            CreateMap<CreateRoleDto, IdentityRole>();
+
+            CreateMap<CreateRoleUserDto, IdentityRole>();
         }
     }
 }

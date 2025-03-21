@@ -25,10 +25,13 @@ namespace UserAuth.Services
         public async Task<IActionResult> CreateUser(CreateUserDto dto)
         {
             User user = _mapper.Map<User>(dto);
-            string prefixo = GetUserPrefix(dto.NivelDeAcesso); // define o prefixo com base no nivel de acesso
+            
+            string prefixo = GetUserPrefixo(dto.NivelDeAcesso); // define o prefixo com base no nivel de acesso
+           
             int userCount = await _userManager.Users
                 .Where(userPrefixo => userPrefixo.PrefixoUsuario.StartsWith(prefixo))
                 .CountAsync();
+            
             string usercode = $"{prefixo}{(userCount + 1).ToString("D3")}"; // cria o código do usuário
 
             user.UserName = dto.Username.Replace(" ", "_");
@@ -66,7 +69,7 @@ namespace UserAuth.Services
         }
 
         // Função para definir o prefixo
-        private string GetUserPrefix(string role)
+        private string GetUserPrefixo(string role)
         {
             return role switch
             {

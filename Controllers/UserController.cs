@@ -31,19 +31,26 @@ namespace UserAuth.Controllers
         [Authorize(policy: "RequireAdmin")]
         public IActionResult Get()
         {
-            return Ok("ok");
+            return Ok("Autenticado");
         }
+
         [HttpGet("teste")]
         [Authorize(policy: "RequireStandardUser")]
         public IActionResult Get2()
         {
-            return Ok("ok");
+            return Ok("Autenticado");
         }
+
         [HttpGet("teste2")]
         [Authorize(policy: "RequireSupervisor")]
         public IActionResult Get3()
         {
-            return Ok("ok");
+            return Ok("Autenticado");
+        }
+        [HttpGet("teste3")]
+        public IActionResult Get4()
+        {
+            return Ok("Deu certo!");
         }
     }
 }

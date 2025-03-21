@@ -10,7 +10,7 @@ namespace UserAuth.Model
         [Required]
         public int Matricula { get; set; } //matricula do funcionario
         [Required]
-        public string NivelDeAcesso { get; set; } //basic //admin
+        public string NivelDeAcesso { get; set; } //basic //admin //supervisor
         [Required]
         public DateTime DataDeRegisto { get; set; } = DateTime.Now; //data de registo do Usuario
 
