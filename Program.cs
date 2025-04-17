@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 using System.Text;
 using UserAuth.Authorization;
 using UserAuth.Data;
@@ -23,6 +24,7 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseMySql(connecti
 // injeção do automapper
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+// Configuração do Identity
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
@@ -32,20 +34,16 @@ builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<RoleService>();
 
 // injeção do serviço de autenticação
-builder.Services.AddSingleton<IAuthorizationHandler, AcessoAuthorization>();
+builder.Services.AddScoped<IAuthorizationHandler, AcessoAuthorization>();
 //configuração de policy de autorização
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("RequireAdmin", policy => policy.AddRequirements(new NivelDeAcesso("Administrador"))); //policy de admin acesso total
-    options.AddPolicy("RequireSupervisor", policy => policy.AddRequirements(new NivelDeAcesso("Supervisor"))); //policy de supervisor acesso parcial
-    options.AddPolicy("RequireStandardUser", policy => policy.AddRequirements(new NivelDeAcesso("Padrao"))); //policy de usuario padrão acesso basico
-    options.AddPolicy("RequireElevatedAccess", policy => policy.AddRequirements(new NivelDeAcesso("RequireElevatedAccess"))); //policy de acesso elevado acesso para modificação de dados
-
-
-    //options.AddPolicy("RequireSupervisor", options => options.RequireRole("Supervisores"));
-    //options.AddPolicy("RequireStandardUser", options => options.RequireRole("Padrao"));
-    //options.AddPolicy("RequireElevatedAccess", options => options.RequireRole("RequireElevatedAccess"));
+    options.AddPolicy("RequireAdmin", policy => policy.AddRequirements(new NivelDeAcesso("administrador")));
+    options.AddPolicy("RequireSupervisor", policy => policy.AddRequirements(new NivelDeAcesso("supervisor")));
+    options.AddPolicy("RequireStandardUser", policy => policy.AddRequirements(new NivelDeAcesso("usuario")));
+    options.AddPolicy("RequireElevatedAccess", policy => policy.AddRequirements(new NivelDeAcesso("requireElevatedAccess")));
 });
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -57,9 +55,10 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("qwertyuiopásdfghjklçzxcvbnm7531522HJBHKNJLMKFDKGSSHSAEW")),
         ValidateAudience = false,
         ValidateIssuer = false,
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.Zero,
     };
 });
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

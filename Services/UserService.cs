@@ -28,7 +28,8 @@ namespace UserAuth.Services
             
             string prefixo = GetUserPrefixo(dto.NivelDeAcesso); // define o prefixo com base no nivel de acesso
            
-            int userCount = await _userManager.Users
+            int userCount = await _userManager
+                .Users
                 .Where(userPrefixo => userPrefixo.PrefixoUsuario.StartsWith(prefixo))
                 .CountAsync();
             
@@ -48,9 +49,14 @@ namespace UserAuth.Services
         public async Task <string> Login(LoginUserDto dto)
         {
             var user = await _singInManager
-                                       .UserManager
-                                       .Users
-                                       .FirstOrDefaultAsync(user => user.PrefixoUsuario == dto.PrefixoUsuario.ToUpper());
+                .UserManager
+                .Users
+                .FirstOrDefaultAsync(user => user.PrefixoUsuario.ToLower() == dto.PrefixoUsuario.ToLower());
+
+            Console.WriteLine($"Usuário encontrado: {user?.UserName}");
+            Console.WriteLine($"NivelDeAcesso: {user?.NivelDeAcesso}");
+
+
             if (user == null)
             {
                 throw new ApplicationException("Usuário não cadastrado");
@@ -65,7 +71,7 @@ namespace UserAuth.Services
 
             
             var token = _tokenService.GenerateToken(user);
-            return token;
+            return await token;
         }
 
         // Função para definir o prefixo

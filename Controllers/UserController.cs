@@ -10,6 +10,7 @@ namespace UserAuth.Controllers
     public class UserController : ControllerBase
     {
         private UserService _service;
+        private readonly ILogger<UserController> _logger;
 
         public UserController(UserService service)
         {
@@ -18,7 +19,7 @@ namespace UserAuth.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateUser(CreateUserDto dto)
         {
-           var result = await _service.CreateUser(dto);
+            var result = await _service.CreateUser(dto);
             return Ok(result);
         }
         [HttpPost("login")]
@@ -27,27 +28,29 @@ namespace UserAuth.Controllers
             var result = await _service.Login(dto);
             return Ok(result);
         }
-        [HttpGet]
+        [HttpGet("Administrador")]
         [Authorize(policy: "RequireAdmin")]
         public IActionResult Get()
         {
             return Ok("Autenticado");
         }
 
-        [HttpGet("teste")]
+        [HttpGet("Padrao")]
         [Authorize(policy: "RequireStandardUser")]
         public IActionResult Get2()
         {
             return Ok("Autenticado");
         }
 
-        [HttpGet("teste2")]
+        [HttpGet("Supervisor")]
         [Authorize(policy: "RequireSupervisor")]
         public IActionResult Get3()
         {
             return Ok("Autenticado");
         }
+
         [HttpGet("teste3")]
+        [AllowAnonymous]
         public IActionResult Get4()
         {
             return Ok("Deu certo!");

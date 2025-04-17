@@ -25,5 +25,11 @@ namespace UserAuth.Controllers
             var result = await _roleService.AddRoleUser(dto);
             return Ok(result);
         }
+        [HttpGet("view")]
+        public async Task<IActionResult> ViewRoles()
+        {
+            var result = await _roleService.GetRolesUser();
+            return Ok(result);
+        }
     }
 }

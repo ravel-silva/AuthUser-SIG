@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using UserAuth.Data.Dtos;
 using UserAuth.Model;
 
@@ -20,6 +22,7 @@ namespace UserAuth.Services
             _userManager = userManager;
             _mapper = mapper;
         }
+        //criação das roles
         public async Task<IActionResult> CreateRole(CreateRoleDto dto)
         {
             if (await _roleManager.RoleExistsAsync(dto.PrefixoRole))
@@ -34,23 +37,44 @@ namespace UserAuth.Services
             }
             return new OkObjectResult($"Role '{role}' criada com sucesso");
         }
+        //adicionar role ao usuário
         public async Task<IActionResult> AddRoleUser(CreateRoleUserDto dto)
         {
-            if (!await _roleManager.RoleExistsAsync(dto.RoleName))
+            var user = await _userManager.Users.FirstOrDefaultAsync(user => user.PrefixoUsuario == dto.prefixoUsuario);
+            if (user == null)
             {
-                return new BadRequestObjectResult("Role não existente");
-            }
-            var result = _userManager.Users.FirstOrDefault(user => user.PrefixoUsuario == dto.prefixoUsuario);
-            if (result == null){
                 return new BadRequestObjectResult("Usuário não cadastrado");
             }
-            IdentityRole AddRole = _mapper.Map<IdentityRole>(dto);
-            IdentityResult resultRole = await _userManager.AddToRoleAsync(result, AddRole.Name);
+            var RolesExiste = await _userManager.GetRolesAsync(user);
+            var rolesToAdd = dto.RoleName.Except(RolesExiste);
+            if (!rolesToAdd.Any())
+            {
+                return new BadRequestObjectResult("Usuário já possui as roles especificadas");
+            }
+
+            IdentityResult resultRole = await _userManager.AddToRolesAsync(user, rolesToAdd.ToList());
             if (!resultRole.Succeeded)
             {
                 return new BadRequestObjectResult("Erro ao adicionar a role" + string.Join(", ", resultRole.Errors.Select(erro => erro.Description)));
             }
-            return new OkObjectResult($"Role '{AddRole.Name}' adicionada com sucesso ao usuário '{result.PrefixoUsuario}'");
+            return new OkObjectResult($"Role '{string.Join(",", dto.RoleName)}' adicionada com sucesso ao usuário '{user.UserName}'");
+        }
+        // retornar a lista de usuarios com suas roles
+        public async Task<IActionResult> GetRolesUser()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            var usersWithRoles = new List<ReadRoleDto>();
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+               
+                usersWithRoles.Add(new ReadRoleDto
+                {
+                    Prexifo = user.PrefixoUsuario,
+                    Role = string.Join(", ", roles)
+                });
+            }
+            return new OkObjectResult(usersWithRoles);
         }
     }
 }

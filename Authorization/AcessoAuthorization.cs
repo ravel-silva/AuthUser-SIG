@@ -1,49 +1,61 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.VisualBasic;
+using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
+using UserAuth.Model;
+using Microsoft.Extensions.Logging;
 
 namespace UserAuth.Authorization
 {
     public class AcessoAuthorization : AuthorizationHandler<NivelDeAcesso>
     {
-        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, NivelDeAcesso requirement)
+        private readonly UserManager<User> _userManager;
+        private readonly ILogger<AcessoAuthorization> _logger;
+
+        public AcessoAuthorization(UserManager<User> userManager, ILogger<AcessoAuthorization> logger)
         {
+            _userManager = userManager;
+            _logger = logger;
+        }
 
-            var nivelDeAcessoClaim = context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role);
-
-
-            if (nivelDeAcessoClaim == null)
+        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, NivelDeAcesso requirement)
+        {
+            // Primeiro, verificamos os claims para garantir que o Id do usuário esteja presente.
+            var idClaim = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(idClaim))
             {
-                Console.WriteLine("❌ Nenhuma claim de nível de acesso encontrada.");
-                return Task.CompletedTask;
+                _logger.LogWarning("⚠️ Claim do ID do usuário não encontrada.");
+                context.Fail(); // Falha na autorização, pois o ID do usuário não foi encontrado
+                return;
             }
-            if (nivelDeAcessoClaim.Value == "Administrador")
-            {
-                context.Succeed(requirement);
-                return Task.CompletedTask;
-            }
-            // personalizando o nivel de supervisores
-            var acessosPermitidosParaSupervisores = new[]
-            {
-                "Supervisor",
-                "Padrao",
-            };
 
-            if (context.User.IsInRole("Supervisor") &&
-                acessosPermitidosParaSupervisores.Contains(requirement.nivel))
+            _logger.LogInformation($"[DEBUG] ClaimTypes.NameIdentifier: {idClaim}");
+
+            // Agora buscamos o usuário na base de dados usando o Id.
+            var user = await _userManager.GetUserAsync(context.User);
+            if (user == null)
             {
-                context.Succeed(requirement);
-                return Task.CompletedTask;
+                _logger.LogWarning("⚠️ Usuário não encontrado com o ID: {idClaim}");
+                context.Fail(); // Falha na autorização, pois o usuário não foi encontrado
+                return;
             }
-            if (nivelDeAcessoClaim.Value == requirement.nivel)
+
+            _logger.LogInformation("Usuário encontrado: {userName}", user.UserName);
+
+            // Agora buscamos os roles do usuário.
+            var roles = await _userManager.GetRolesAsync(user);
+            _logger.LogInformation($"Roles do usuário: {string.Join(", ", roles)}");
+
+            // Verificando se o usuário tem o role necessário para passar a autorização.
+            if (roles.Contains(requirement.nivel))
             {
-                context.Succeed(requirement);
+                _logger.LogInformation("O usuário tem o role adequado. Autorizado!");
+                context.Succeed(requirement); // Sucesso na autorização
             }
             else
             {
-                Console.WriteLine($"❌ Acesso negado! Esperado: {requirement.nivel}, recebido: {nivelDeAcessoClaim.Value}");
+                _logger.LogWarning("O usuário não tem o role adequado. Falha na autorização.");
+                context.Fail(); // Falha na autorização, pois o usuário não tem o role necessário
             }
-            return Task.CompletedTask;
         }
     }
 }

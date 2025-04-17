@@ -7,7 +7,7 @@ namespace UserAuth.Authorization
         public string nivel { get; set; }
         public NivelDeAcesso(string nivelDeAcesso)
         {
-            nivel = nivelDeAcesso;
+            this.nivel = nivelDeAcesso;
         }
     }
 }
